@@ -64,7 +64,8 @@ app.post('/api/wishes', (req, res) => {
 // Serve Static Frontend Assets
 app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('*', (req, res) => {
+// Catch-all route for SPA
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
