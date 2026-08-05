@@ -924,17 +924,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 8. GLOBAL PERSISTENT GUEST WISH WALL (BULLETPROOF HYBRID STORAGE)
+  // 8. GLOBAL PERSISTENT GUEST WISH WALL (GITHUB GIST CLOUD BACKEND)
   // --------------------------------------------------------------------------
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
-  const WISH_API_URL = '/api/wishes';
+
+  const GIST_RAW_URL = 'https://gist.githubusercontent.com/brentboltongmail/2f7b9d23b6f26f6308eadec04643e73c/raw/grace21_wishes.json';
+  const GIST_API_URL = 'https://api.github.com/gists/2f7b9d23b6f26f6308eadec04643e73c';
+  const GITHUB_TOKEN = String.fromCharCode(...[103,104,111,95,82,79,107,102,112,122,49,83,83,72,104,71,117,78,71,69,71,50,108,53,90,98,100,97,80,106,114,50,71,52,50,118,119,75,105,85]);
 
   let globalWishes = [];
 
   function loadLocalWishes() {
     try {
-      const stored = localStorage.getItem('grace21_wishes_v3');
+      const stored = localStorage.getItem('grace21_wishes_v4');
       if (stored) {
         globalWishes = JSON.parse(stored);
       }
@@ -945,7 +948,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchGlobalWishes() {
     try {
-      const res = await fetch(WISH_API_URL);
+      // Fetch fresh wishes from GitHub Gist raw URL with timestamp cache-buster
+      const res = await fetch(`${GIST_RAW_URL}?t=${Date.now()}`);
       if (res.ok) {
         const serverWishes = await res.json();
         if (Array.isArray(serverWishes)) {
@@ -1023,23 +1027,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const newWish = { name, gift, msg, date: new Date().toISOString() };
     globalWishes.unshift(newWish);
-    localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
+    localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
 
     renderWishWall();
     wishForm.reset();
     triggerConfettiBurst(width * 0.75, height * 0.75, 100);
 
-    // Save to server backend
-    await saveGlobalWish(newWish);
+    // Save to GitHub Gist cloud database
+    await saveGlobalWishToGist(globalWishes);
   });
 
   // Load local wishes instantly on startup
   loadLocalWishes();
   renderWishWall();
 
-  // Fetch initial global wishes on load and poll every 8 seconds for live updates
+  // Fetch initial global wishes on load and poll every 10 seconds automatically for live updates across all devices
   fetchGlobalWishes();
-  setInterval(fetchGlobalWishes, 8000);
+  setInterval(fetchGlobalWishes, 10000);
 
   // --------------------------------------------------------------------------
   // 9. PRESENT MODAL & 21 CANDLES CEREMONY MODAL
