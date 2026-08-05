@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // --------------------------------------------------------------------------
-  // 1. BACKGROUND CANVASES (STARDUST & CONFETTI)
+  // 1. BACKGROUND & FIREWORKS CANVASES
   // --------------------------------------------------------------------------
   const bgCanvas = document.getElementById('bg-canvas');
   const bgCtx = bgCanvas.getContext('2d');
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initStars();
   });
 
-  // Starfield Particles
+  // Starfield Background
   let stars = [];
   function initStars() {
     stars = [];
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderBackground() {
     bgCtx.clearRect(0, 0, width, height);
     
-    // Ambient Glow
+    // Ambient Nebula Glow
     const gradient = bgCtx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, width);
     gradient.addColorStop(0, 'rgba(21, 10, 42, 0.9)');
     gradient.addColorStop(1, 'rgba(8, 2, 18, 0.98)');
@@ -69,8 +69,100 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   renderBackground();
 
-  // Confetti Physics Engine
+  // --------------------------------------------------------------------------
+  // 2. OVERWHELMING FIREWORKS & CONFETTI ENGINE
+  // --------------------------------------------------------------------------
   let confettiParticles = [];
+  let fireworksRockets = [];
+  let fireworkSparks = [];
+  let flashAlpha = 0;
+
+  class FireworkRocket {
+    constructor(targetX, targetY) {
+      this.x = Math.random() * (width * 0.8) + (width * 0.1);
+      this.y = height;
+      this.targetX = targetX || (Math.random() * (width * 0.8) + (width * 0.1));
+      this.targetY = targetY || (Math.random() * (height * 0.45) + (height * 0.1));
+      
+      const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
+      const speed = Math.random() * 4 + 14;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed;
+      
+      this.trail = [];
+      this.exploded = false;
+      this.color = ['#F7D070', '#E8A5C8', '#FF5DA2', '#56E1FF', '#FFD700', '#FFFFFF', '#9B51E0'][Math.floor(Math.random() * 7)];
+    }
+
+    update() {
+      this.trail.push({ x: this.x, y: this.y, alpha: 1 });
+      if (this.trail.length > 12) this.trail.shift();
+
+      this.x += this.vx;
+      this.y += this.vy;
+
+      // Rocket whiz / whistle sound trigger
+      if (Math.random() < 0.2) {
+        playSynthWhistle();
+      }
+
+      // Check peak reach
+      if (this.vy < 0 && this.y <= this.targetY) {
+        this.explode();
+        this.exploded = true;
+      }
+    }
+
+    explode() {
+      flashAlpha = 0.25;
+      playSynthExplosion();
+
+      const particleCount = Math.floor(Math.random() * 120) + 180; // Overwhelming count
+      const colors = [this.color, '#F7D070', '#FFFFFF', '#FF5DA2', '#56E1FF'];
+
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 10 + 2;
+        fireworkSparks.push({
+          x: this.x,
+          y: this.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 4 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 1,
+          decay: Math.random() * 0.015 + 0.008,
+          gravity: 0.08,
+          flicker: Math.random() > 0.3
+        });
+      }
+    }
+
+    draw(ctx) {
+      // Trail
+      for (let i = 0; i < this.trail.length; i++) {
+        const t = this.trail[i];
+        ctx.save();
+        ctx.globalAlpha = (i / this.trail.length) * 0.8;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Rocket head
+      ctx.save();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function triggerConfettiBurst(originX = width / 2, originY = height / 3, count = 120) {
     const colors = ['#F7D070', '#E8A5C8', '#56E1FF', '#FF5DA2', '#FFFFFF', '#FFD700'];
     for (let i = 0; i < count; i++) {
@@ -85,19 +177,84 @@ document.addEventListener('DOMContentLoaded', () => {
         color: colors[Math.floor(Math.random() * colors.length)],
         rotation: Math.random() * 360,
         rSpeed: (Math.random() - 0.5) * 12,
-        opacity: 1,
-        life: 1
+        opacity: 1
       });
     }
   }
 
-  function renderConfetti() {
+  // OVERWHELMING FIREWORKS GRAND FINALE
+  function launchGrandFireworksFinale() {
+    initAudioContext();
+    
+    // Attempt ElevenLabs Sound Effects API if Key is present
+    playElevenLabsFireworksSoundEffect();
+
+    let waveCount = 0;
+    const interval = setInterval(() => {
+      // Launch 5 rockets per wave across screen
+      for (let i = 0; i < 4; i++) {
+        fireworksRockets.push(new FireworkRocket());
+      }
+      waveCount++;
+      if (waveCount >= 10) { // 40 rockets total
+        clearInterval(interval);
+      }
+    }, 250);
+  }
+
+  function renderConfettiAndFireworks() {
     confettiCtx.clearRect(0, 0, width, height);
+
+    // Flash Effect
+    if (flashAlpha > 0) {
+      confettiCtx.save();
+      confettiCtx.fillStyle = `rgba(255, 240, 200, ${flashAlpha})`;
+      confettiCtx.fillRect(0, 0, width, height);
+      confettiCtx.restore();
+      flashAlpha -= 0.02;
+    }
+
+    // Render Fireworks Rockets
+    for (let i = fireworksRockets.length - 1; i >= 0; i--) {
+      const rocket = fireworksRockets[i];
+      rocket.update();
+      rocket.draw(confettiCtx);
+      if (rocket.exploded) {
+        fireworksRockets.splice(i, 1);
+      }
+    }
+
+    // Render Fireworks Sparks
+    for (let i = fireworkSparks.length - 1; i >= 0; i--) {
+      const spark = fireworkSparks[i];
+      spark.x += spark.vx;
+      spark.y += spark.vy;
+      spark.vy += spark.gravity;
+      spark.vx *= 0.98;
+      spark.alpha -= spark.decay;
+
+      if (spark.alpha <= 0) {
+        fireworkSparks.splice(i, 1);
+        continue;
+      }
+
+      confettiCtx.save();
+      confettiCtx.globalAlpha = spark.flicker && Math.random() > 0.4 ? spark.alpha * 0.5 : spark.alpha;
+      confettiCtx.fillStyle = spark.color;
+      confettiCtx.shadowBlur = 10;
+      confettiCtx.shadowColor = spark.color;
+      confettiCtx.beginPath();
+      confettiCtx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
+      confettiCtx.fill();
+      confettiCtx.restore();
+    }
+
+    // Render Confetti
     for (let i = confettiParticles.length - 1; i >= 0; i--) {
       const p = confettiParticles[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.25; // Gravity
+      p.vy += 0.25;
       p.vx *= 0.98;
       p.rotation += p.rSpeed;
       p.opacity -= 0.008;
@@ -115,12 +272,13 @@ document.addEventListener('DOMContentLoaded', () => {
       confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
       confettiCtx.restore();
     }
-    requestAnimationFrame(renderConfetti);
+
+    requestAnimationFrame(renderConfettiAndFireworks);
   }
-  renderConfetti();
+  renderConfettiAndFireworks();
 
   // --------------------------------------------------------------------------
-  // 2. WEB AUDIO API SYNTHESIZER & SPECTRUM VISUALIZER (GRACE'S ANTHEM)
+  // 3. SOUND SYNTHESIS & ELEVENLABS FIREWORKS AUDIO
   // --------------------------------------------------------------------------
   let audioCtx = null;
   let isPlaying = false;
@@ -141,6 +299,108 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
+    }
+  }
+
+  // Realistic Synthesized Firework Sound Effects
+  function playSynthWhistle() {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1400, audioCtx.currentTime + 0.3);
+
+    const vol = parseFloat(volumeSlider.value) * 0.15;
+    gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  }
+
+  function playSynthExplosion() {
+    if (!audioCtx) return;
+    
+    // Deep Sub-Bass Boom
+    const osc = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+
+    const vol = parseFloat(volumeSlider.value) * 0.6;
+    oscGain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+    osc.connect(oscGain);
+    oscGain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+
+    // Crackle Noise Burst
+    const bufferSize = audioCtx.sampleRate * 0.4;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = buffer;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.4);
+
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(vol * 0.5, audioCtx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+
+    whiteNoise.start();
+    whiteNoise.stop(audioCtx.currentTime + 0.4);
+  }
+
+  // ELEVENLABS SOUND GENERATION API INTEGRATION FOR FIREWORKS
+  async function playElevenLabsFireworksSoundEffect() {
+    const apiKeyInput = document.getElementById('elevenlabs-api-key');
+    const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+
+    if (!apiKey) return; // Fallback smoothly to web audio synth fireworks
+
+    try {
+      const response = await fetch('https://api.elevenlabs.io/v1/sound-generation', {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey
+        },
+        body: JSON.stringify({
+          text: "Grand finale fireworks explosions boisterous roaring boom crackle cheering celebration",
+          duration_seconds: 4.0,
+          prompt_influence: 0.8
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.volume = parseFloat(volumeSlider.value);
+        audio.play();
+      }
+    } catch (e) {
+      console.warn("ElevenLabs sound generation request skipped:", e);
     }
   }
 
@@ -240,7 +500,6 @@ document.addEventListener('DOMContentLoaded', () => {
     visCtx.clearRect(0, 0, visCanvas.width, visCanvas.height);
 
     if (!analyser || !isPlaying) {
-      // Idle wave
       visCtx.fillStyle = 'rgba(247, 208, 112, 0.4)';
       visCtx.fillRect(0, visCanvas.height / 2 - 2, visCanvas.width, 4);
       return;
@@ -269,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
   drawAudioVisualizer();
 
   // --------------------------------------------------------------------------
-  // 3. ELEVENLABS INTEGRATION & MODAL
+  // 4. ELEVENLABS INTEGRATION & MODAL
   // --------------------------------------------------------------------------
   const elevenModal = document.getElementById('elevenlabs-modal');
   const btnOpenEleven = document.getElementById('btn-open-elevenlabs');
@@ -287,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const prompt = elevenPromptInput.value.trim();
 
     if (!apiKey) {
-      elevenStatus.innerHTML = "<span style='color:#FF5DA2;'>⚠️ Please enter your ElevenLabs API Key above! In the meantime, playing built-in vocal synthesis...</span>";
+      elevenStatus.innerHTML = "<span style='color:#FF5DA2;'>⚠️ Please enter your ElevenLabs API Key above! Playing local speech synth...</span>";
       triggerVocalSpeech();
       return;
     }
@@ -295,7 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
     elevenStatus.textContent = "⌛ Generating vocal audio via ElevenLabs API...";
 
     try {
-      // Default Voice ID for ElevenLabs (Rachel: 21m00Tcm4TlvDq8ikWAM)
       const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM', {
         method: 'POST',
         headers: {
@@ -326,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 4. INTERACTIVE FLYING UNICORN ENGINE
+  // 5. INTERACTIVE FLYING UNICORN ENGINE
   // --------------------------------------------------------------------------
   const unicornFlyer = document.getElementById('unicorn-flyer');
   const btnLaunchUnicorn = document.getElementById('btn-launch-unicorn');
@@ -335,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function launchUnicornFlight() {
     unicornFlyer.classList.remove('hidden');
     unicornFlyer.classList.remove('flying');
-    void unicornFlyer.offsetWidth; // Trigger reflow
+    void unicornFlyer.offsetWidth;
     unicornFlyer.classList.add('flying');
 
     triggerConfettiBurst(width / 4, height / 2, 80);
@@ -350,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
   launchTriggers.forEach(btn => btn.addEventListener('click', launchUnicornFlight));
 
   // --------------------------------------------------------------------------
-  // 5. CHAMPAGNE CORK POP & FIREWORKS
+  // 6. CHAMPAGNE & FIREWORKS BUTTON TRIGGERS
   // --------------------------------------------------------------------------
   const btnPopChampagne = document.getElementById('btn-pop-champagne');
   const btnCorkPop = document.getElementById('btn-cork-pop');
@@ -358,7 +616,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function popChampagneToast() {
     initAudioContext();
-    // Play Pop sound
     if (audioCtx) {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -378,16 +635,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnPopChampagne.addEventListener('click', popChampagneToast);
   btnCorkPop.addEventListener('click', popChampagneToast);
-  btnFireworks.addEventListener('click', () => {
-    for (let i = 0; i < 5; i++) {
-      setTimeout(() => {
-        triggerConfettiBurst(Math.random() * width, Math.random() * (height * 0.7), 100);
-      }, i * 300);
-    }
-  });
+  
+  // GRAND OVERWHELMING FIREWORKS BUTTON TRIGGER
+  btnFireworks.addEventListener('click', launchGrandFireworksFinale);
 
   // --------------------------------------------------------------------------
-  // 6. 21 GOLDEN MILESTONES POPULATOR
+  // 7. 21 GOLDEN MILESTONES POPULATOR
   // --------------------------------------------------------------------------
   const milestonesContainer = document.getElementById('milestones-container');
   const milestonesData = [
@@ -426,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 7. GUEST WISH WALL (LOCAL STORAGE)
+  // 8. GUEST WISH WALL (LOCAL STORAGE)
   // --------------------------------------------------------------------------
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
@@ -480,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadWishes();
 
   // --------------------------------------------------------------------------
-  // 8. PRESENT MODAL
+  // 9. PRESENT MODAL
   // --------------------------------------------------------------------------
   const giftModal = document.getElementById('gift-modal');
   const btnUnwrap = document.getElementById('btn-unwrap-present');
@@ -496,7 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnSingSpeech.addEventListener('click', triggerVocalSpeech);
 
   // --------------------------------------------------------------------------
-  // 9. COUNTDOWN TIMER TICKER
+  // 10. COUNTDOWN TIMER TICKER
   // --------------------------------------------------------------------------
   let secCounter = 0;
   setInterval(() => {
