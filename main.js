@@ -1000,9 +1000,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const giftModalClose = document.getElementById('gift-modal-close');
   const btnSingSpeech = document.getElementById('btn-sing-speech');
 
+  // State tracking for required birthday ceremonies before auto-tour
+  let hasUnwrappedGift = false;
+  let hasBlownCandles = false;
+
+  function checkCeremoniesComplete() {
+    if (hasUnwrappedGift && hasBlownCandles && !isAutoTourActive) {
+      setTimeout(() => {
+        if (!isPlaying) startBirthdayAnthem();
+        startAutoTour();
+        triggerConfettiBurst(width / 2, height / 3, 200);
+      }, 1500);
+    }
+  }
+
   btnUnwrap.addEventListener('click', () => {
     giftModal.classList.remove('hidden');
     triggerConfettiBurst(width / 2, height / 2, 180);
+    hasUnwrappedGift = true;
+    checkCeremoniesComplete();
   });
 
   giftModalClose.addEventListener('click', () => giftModal.classList.add('hidden'));
@@ -1087,6 +1103,9 @@ document.addEventListener('DOMContentLoaded', () => {
       triggerCandleSparklerFountain(width / 2, height / 2);
       if (candleStatus) candleStatus.innerHTML = "<span style='color:#F7D070; font-weight:700;'>✨ GRACE BLEW OUT ALL 21 CANDLES! May all your birthday wishes come true!</span>";
 
+      hasBlownCandles = true;
+      checkCeremoniesComplete();
+
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance("Grace blew out all 21 candles! May every single 21st birthday wish come true!");
@@ -1117,22 +1136,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // 10. AUTO-PLAY MUSIC & AUTO-TOUR ENGINE
   // --------------------------------------------------------------------------
-  let isAutoTourActive = true;
+  let isAutoTourActive = false;
   let autoTourFrameId = null;
   const triggeredButtons = new Set();
 
   const autotourStatus = document.getElementById('autotour-status');
   const btnToggleAutotour = document.getElementById('btn-toggle-autotour');
-  const autotourIcon = document.getElementById('autotour-icon');
 
-  // Attempt Autoplay Music Default
-  setTimeout(() => {
-    try {
-      startBirthdayAnthem();
-    } catch (e) {
-      console.warn("Autoplay audio waiting for user gesture:", e);
-    }
-  }, 600);
+  // Set initial status to prompt user for gift & candles
+  if (autotourStatus) autotourStatus.innerHTML = '<i class="fa-solid fa-gift"></i> Complete Grace\'s Gift & Candles to Start Auto-Tour';
+  if (btnToggleAutotour) btnToggleAutotour.innerHTML = '<i class="fa-solid fa-play"></i> Start Tour';
 
   // Unlock Audio on First User Gesture if blocked by browser autoplay policy
   const unlockAudioEvents = ['click', 'touchstart', 'keydown', 'scroll'];
@@ -1158,8 +1171,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('.confetti-trigger'),
       document.querySelector('.pop-balloons-trigger'),
       document.getElementById('btn-cork-pop'),
-      document.getElementById('btn-fireworks'),
-      document.getElementById('btn-unwrap-present')
+      document.getElementById('btn-fireworks')
     ];
 
     tourTargets.forEach(btn => {
@@ -1192,6 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startAutoTour() {
     isAutoTourActive = true;
+    if (!isPlaying) startBirthdayAnthem();
     if (autotourStatus) autotourStatus.innerHTML = '<i class="fa-solid fa-clapperboard"></i> Royal Auto-Tour Active';
     if (btnToggleAutotour) btnToggleAutotour.innerHTML = '<i class="fa-solid fa-pause"></i> Pause Tour';
     autoTourFrameId = requestAnimationFrame(runAutoTourLoop);
@@ -1227,10 +1240,5 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, { passive: true });
   });
-
-  // Start Auto-Tour by default after brief 1-second delay
-  setTimeout(() => {
-    startAutoTour();
-  }, 1000);
 
 });
