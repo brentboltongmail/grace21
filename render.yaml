@@ -1,6 +1,6 @@
 services:
   - type: web
     name: grace21
-    env: static
-    buildCommand: npm run build
-    staticPublishPath: dist
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start

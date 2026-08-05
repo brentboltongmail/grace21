@@ -924,11 +924,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 8. GLOBAL PERSISTENT GUEST WISH WALL (CLOUD BACKEND + LOCAL CACHE)
+  // 8. GLOBAL PERSISTENT GUEST WISH WALL (BACKEND API + LOCAL CACHE)
   // --------------------------------------------------------------------------
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
-  const WISH_API_URL = 'https://api.restful-api.dev/objects/ff8081819f7e10ae019fd38367407c4d';
+  const WISH_API_URL = '/api/wishes';
 
   let globalWishes = [];
 
@@ -936,34 +936,36 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch(WISH_API_URL);
       if (res.ok) {
-        const json = await res.json();
-        if (json && json.data && Array.isArray(json.data.wishes)) {
-          globalWishes = json.data.wishes.filter(w => 
-            w.name !== "Dad (Brent)" && w.name !== "Mom" && w.name !== "Bestie Squad"
-          );
-          localStorage.setItem('grace21_wishes_v2', JSON.stringify(globalWishes));
+        const wishes = await res.json();
+        if (Array.isArray(wishes)) {
+          globalWishes = wishes;
+          localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
         }
       }
     } catch (err) {
-      console.warn("Using local cache for wishes:", err);
-      const stored = localStorage.getItem('grace21_wishes_v2');
+      console.warn("Using local fallback cache for wishes:", err);
+      const stored = localStorage.getItem('grace21_wishes_v3');
       if (stored) globalWishes = JSON.parse(stored);
     }
     renderWishWall();
   }
 
-  async function saveGlobalWishes(newWishes) {
+  async function saveGlobalWish(newWish) {
     try {
-      await fetch(WISH_API_URL, {
-        method: 'PUT',
+      const res = await fetch(WISH_API_URL, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'grace21_wishes',
-          data: { wishes: newWishes }
-        })
+        body: JSON.stringify(newWish)
       });
+      if (res.ok) {
+        const updatedWishes = await res.json();
+        if (Array.isArray(updatedWishes)) {
+          globalWishes = updatedWishes;
+          localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
+        }
+      }
     } catch (err) {
-      console.error("Failed to sync wish to cloud:", err);
+      console.error("Failed to sync wish to server backend:", err);
     }
   }
 
@@ -1008,19 +1010,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const newWish = { name, gift, msg, date: new Date().toISOString() };
     globalWishes.unshift(newWish);
-    localStorage.setItem('grace21_wishes_v2', JSON.stringify(globalWishes));
+    localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
 
     renderWishWall();
     wishForm.reset();
     triggerConfettiBurst(width * 0.75, height * 0.75, 100);
 
-    // Save to global cloud database
-    await saveGlobalWishes(globalWishes);
+    // Save to server backend
+    await saveGlobalWish(newWish);
   });
 
-  // Fetch initial global wishes on load and poll every 8 seconds for live updates
+  // Fetch initial global wishes on load and poll every 6 seconds for live updates
   fetchGlobalWishes();
-  setInterval(fetchGlobalWishes, 8000);
+  setInterval(fetchGlobalWishes, 6000);
 
   // --------------------------------------------------------------------------
   // 9. PRESENT MODAL & 21 CANDLES CEREMONY MODAL
