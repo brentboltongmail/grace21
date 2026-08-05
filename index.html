@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy 21st Birthday Grace! ✨ Royal Celestial Gala</title>
+  <meta name="description" content="An extravagant, ornate 21st birthday celebration website dedicated to Grace, featuring AI artwork, custom birthday music player, particle fireworks, and interactive birthday magic.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Particle & Confetti Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Flying Unicorn Sprite Container -->
+  <div id="unicorn-flyer" class="unicorn-flyer hidden">
+    <img src="/assets/grace_unicorn.jpg" alt="Grace's Flying Rainbow Unicorn" class="flying-unicorn-img">
+    <div class="rainbow-trail"></div>
+  </div>
+
+  <!-- Audio & Gala Header Toolbar -->
+  <header class="gala-header">
+    <div class="brand">
+      <span class="monogram">GRACE XXI</span>
+      <span class="badge">Royal Gala</span>
+    </div>
+
+    <!-- Music Player Bar -->
+    <div class="music-player-card">
+      <button id="btn-play-song" class="play-btn" aria-label="Play Grace's Birthday Anthem">
+        <i class="fa-solid fa-play" id="play-icon"></i>
+      </button>
+      <div class="song-info">
+        <div class="song-title">Grace's 21st Birthday Anthem 🎵</div>
+        <div class="song-subtitle" id="song-status-text">Web Audio Synth & ElevenLabs Ready</div>
+      </div>
+      <!-- Spectrum Visualizer Canvas -->
+      <canvas id="audio-vis-canvas" width="120" height="32"></canvas>
+      
+      <div class="volume-box">
+        <i class="fa-solid fa-volume-high"></i>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
+      </div>
+
+      <button id="btn-open-elevenlabs" class="gala-btn-small" title="ElevenLabs AI Voice & Custom Audio Settings">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Sound
+      </button>
+    </div>
+
+    <nav class="quick-nav">
+      <button id="btn-launch-unicorn" class="nav-btn"><i class="fa-solid fa-horse"></i> Fly Unicorn</button>
+      <button id="btn-pop-champagne" class="nav-btn"><i class="fa-solid fa-champagne-glasses"></i> Toast Grace</button>
+    </nav>
+  </header>
+
+  <main class="gala-main">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-glow-container">
+        <div class="sparkle-ring"></div>
+        <div class="crown-icon">👑</div>
+        <h1 class="hero-title">
+          <span class="gold-gradient-text">Happy 21st Birthday</span>
+          <span class="grace-name">GRACE</span>
+        </h1>
+        <p class="hero-subtitle">
+          ✨ Welcome to your Extravagant Celestial 21st Birthday Gala ✨
+        </p>
+
+        <!-- Countdown Timer -->
+        <div class="countdown-container">
+          <div class="countdown-card">
+            <span id="cd-days" class="cd-num">21</span>
+            <span class="cd-label">Years of Magic</span>
+          </div>
+          <div class="cd-separator">:</div>
+          <div class="countdown-card">
+            <span id="cd-hours" class="cd-num">252</span>
+            <span class="cd-label">Months</span>
+          </div>
+          <div class="cd-separator">:</div>
+          <div class="countdown-card">
+            <span id="cd-mins" class="cd-num">7,670</span>
+            <span class="cd-label">Days</span>
+          </div>
+          <div class="cd-separator">:</div>
+          <div class="countdown-card">
+            <span id="cd-secs" class="cd-num">00</span>
+            <span class="cd-label">Pure Joy</span>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button id="btn-unwrap-present" class="gala-btn-primary">
+            <i class="fa-solid fa-gift"></i> Unwrap Grace's Royal Gift
+          </button>
+          <button id="btn-light-candles" class="gala-btn-secondary">
+            <i class="fa-solid fa-fire-flame-curved"></i> Blow Out 21 Candles
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Royal Gallery Carousel Section -->
+    <section class="gallery-section">
+      <div class="section-header">
+        <h2 class="section-title">Fairytale Masterpieces for Grace</h2>
+        <p class="section-desc">Extravagant AI Artworks Created Exclusively for Grace's 21st Birthday</p>
+      </div>
+
+      <div class="gallery-grid">
+        <!-- Card 1: Flying Unicorn -->
+        <div class="art-card" data-tilt>
+          <div class="art-img-wrapper">
+            <img src="/assets/grace_unicorn.jpg" alt="Grace's Rainbow Flying Unicorn" loading="lazy">
+            <div class="art-overlay">
+              <span class="art-tag">Celestial Fantasy</span>
+            </div>
+          </div>
+          <div class="art-content">
+            <h3>Grace's Cosmic Rainbow Unicorn</h3>
+            <p>Soaring through starry nebulae and golden streamers, carrying endless dreams for Grace's 21st year.</p>
+            <button class="art-action-btn launch-unicorn-trigger"><i class="fa-solid fa-sparkles"></i> Launch Across Sky</button>
+          </div>
+        </div>
+
+        <!-- Card 2: Royal 5-Tier Cake -->
+        <div class="art-card" data-tilt>
+          <div class="art-img-wrapper">
+            <img src="/assets/grace_royal_cake.jpg" alt="Grace's 5-Tier Royal Cake" loading="lazy">
+            <div class="art-overlay">
+              <span class="art-tag">24K Gold Filigree</span>
+            </div>
+          </div>
+          <div class="art-content">
+            <h3>The Royal 21st Crown Cake</h3>
+            <p>A masterpiece standing on crystal pedestals, topped with glowing golden candles spelling '21'.</p>
+            <button class="art-action-btn light-cake-trigger"><i class="fa-solid fa-cake-candles"></i> Sparkle Candles</button>
+          </div>
+        </div>
+
+        <!-- Card 3: Gourmet Cupcakes -->
+        <div class="art-card" data-tilt>
+          <div class="art-img-wrapper">
+            <img src="/assets/grace_cupcakes.jpg" alt="Grace's Gourmet Cupcakes" loading="lazy">
+            <div class="art-overlay">
+              <span class="art-tag">Rose & Gold Leaf</span>
+            </div>
+          </div>
+          <div class="art-content">
+            <h3>Gourmet 21st Cupcake Tower</h3>
+            <p>Hand-crafted with royal lilac frosting, edible sugar tiaras, gold leaf, and shimmering fairy dust.</p>
+            <button class="art-action-btn confetti-trigger"><i class="fa-solid fa-wand-magic"></i> Sprinkle Magic Dust</button>
+          </div>
+        </div>
+
+        <!-- Card 4: Balloons & Streamers -->
+        <div class="art-card" data-tilt>
+          <div class="art-img-wrapper">
+            <img src="/assets/grace_balloons.jpg" alt="Shimmering Balloons & Streamers" loading="lazy">
+            <div class="art-overlay">
+              <span class="art-tag">Iridescent Gala</span>
+            </div>
+          </div>
+          <div class="art-content">
+            <h3>Iridescent Birthday Balloons</h3>
+            <p>Floating rose gold and metallic balloons filled with gold foil confetti that pops into stardust.</p>
+            <button class="art-action-btn pop-balloons-trigger"><i class="fa-solid fa-burst"></i> Pop Celebration Balloons</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 21 Golden Milestones of Grace -->
+    <section class="milestones-section">
+      <div class="section-header">
+        <h2 class="section-title">21 Wishes & Golden Milestones</h2>
+        <p class="section-desc">21 Fabulous Reasons Grace Makes the World Brighter</p>
+      </div>
+
+      <div class="milestones-grid" id="milestones-container">
+        <!-- JS dynamically populates 21 milestone cards -->
+      </div>
+    </section>
+
+    <!-- Interactive Champagne Toast & Fireworks Arena -->
+    <section class="interactive-arena">
+      <div class="arena-card">
+        <div class="arena-content">
+          <h2>Raise a Champagne Toast to Grace! 🥂</h2>
+          <p>Pop the golden cork to unleash a cascade of glowing bubbles and fireworks across Grace's gala.</p>
+          <div class="arena-buttons">
+            <button id="btn-cork-pop" class="gala-btn-gold">
+              <i class="fa-solid fa-champagne-glasses"></i> Pop Champagne Cork
+            </button>
+            <button id="btn-fireworks" class="gala-btn-rainbow">
+              <i class="fa-solid fa-volcano"></i> Launch Grand Fireworks
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Guest Wish Wall Section -->
+    <section class="wish-section">
+      <div class="section-header">
+        <h2 class="section-title">Grace's Birthday Wish Book</h2>
+        <p class="section-desc">Leave a Heartfelt Note & Gift for Grace's 21st Celebration</p>
+      </div>
+
+      <div class="wish-layout">
+        <!-- Form -->
+        <form id="wish-form" class="wish-card-form">
+          <h3>Write to Grace ✍️</h3>
+          <div class="input-group">
+            <label for="wish-name">Your Name</label>
+            <input type="text" id="wish-name" placeholder="e.g. Dad, Mom, Bestie..." required>
+          </div>
+
+          <div class="input-group">
+            <label for="wish-gift">Virtual Gift for Grace</label>
+            <select id="wish-gift">
+              <option value="👑 Golden Crown">👑 Golden Crown</option>
+              <option value="💎 Sparkling Diamond">💎 Sparkling Diamond</option>
+              <option value="🦄 Rainbow Unicorn">🦄 Rainbow Unicorn</option>
+              <option value="🎂 Tiered Cake">🎂 Tiered Birthday Cake</option>
+              <option value="🥂 Champagne Toast">🥂 Champagne Toast</option>
+              <option value="🌹 Royal Rose Bouquet">🌹 Royal Rose Bouquet</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="wish-text">Heartfelt Wish</label>
+            <textarea id="wish-text" rows="4" placeholder="Wishing you the happiest 21st birthday Grace..." required></textarea>
+          </div>
+
+          <button type="submit" class="gala-btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> Post Birthday Wish to Grace
+          </button>
+        </form>
+
+        <!-- Wall Grid -->
+        <div class="wish-wall-grid" id="wish-wall">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Present Box Unwrapping Modal -->
+  <div id="gift-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="gift-modal-close">&times;</button>
+      <div class="modal-crown">👑</div>
+      <h2 class="gold-gradient-text">Grace's 21st Birthday Present</h2>
+      <div class="gift-box-animation">
+        <div class="gift-box" id="interactive-gift-box">
+          <div class="gift-lid">🎁</div>
+          <div class="gift-sparkles">✨</div>
+        </div>
+      </div>
+      <p class="gift-message" id="gift-message-text">
+        "Grace, turning 21 is a momentous milestone! You bring extraordinary beauty, intelligence, and joy to everyone around you. May your 21st year be filled with infinite adventures, love, laughter, and magical dreams coming true!"
+      </p>
+      <div class="modal-footer">
+        <button id="btn-sing-speech" class="gala-btn-primary">
+          <i class="fa-solid fa-volume-high"></i> Voice Birthday Speech to Grace
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ElevenLabs & Sound Settings Modal -->
+  <div id="elevenlabs-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="eleven-modal-close">&times;</button>
+      <h2><i class="fa-solid fa-wand-magic-sparkles"></i> ElevenLabs AI Music & Voice Studio</h2>
+      <p class="modal-subtitle">Generate custom AI vocals & audio for Grace using ElevenLabs API</p>
+      
+      <div class="input-group">
+        <label for="elevenlabs-api-key">ElevenLabs API Key (Optional)</label>
+        <input type="password" id="elevenlabs-api-key" placeholder="xi-api-key...">
+      </div>
+
+      <div class="input-group">
+        <label for="elevenlabs-prompt">Voice / Song Script for Grace</label>
+        <textarea id="elevenlabs-prompt" rows="3">Happy 21st Birthday Grace! May your day be filled with rainbow unicorns, golden champagne, and magic!</textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-gen-elevenlabs" class="gala-btn-gold">
+          <i class="fa-solid fa-cloud-bolt"></i> Generate ElevenLabs Vocal for Grace
+        </button>
+        <button id="btn-play-synth-fallback" class="gala-btn-secondary">
+          <i class="fa-solid fa-music"></i> Play Built-in Polyphonic Orchestra
+        </button>
+      </div>
+      <div id="elevenlabs-status" class="status-msg"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="gala-footer">
+    <div class="footer-content">
+      <div class="footer-seal">👑 GRACE XXI 👑</div>
+      <p>Created with boundless love & AI magic for **Grace** on her 21st Birthday.</p>
+      <p class="copyright">Hosted on Render • Designed in Gold & Iridescence</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

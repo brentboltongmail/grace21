@@ -1,0 +1,831 @@
+/* ==========================================================================
+   GRACE 21ST BIRTHDAY CELESTIAL GALA - STYLESHEET
+   ========================================================================== */
+
+:root {
+  --bg-deep: #080212;
+  --bg-card: rgba(22, 10, 38, 0.75);
+  --bg-card-hover: rgba(35, 18, 58, 0.88);
+  
+  --gold-primary: #F7D070;
+  --gold-secondary: #C89932;
+  --gold-light: #FFF0BD;
+  --gold-glow: rgba(247, 208, 112, 0.4);
+
+  --rose-gold: #E8A5C8;
+  --purple-glow: rgba(162, 89, 255, 0.35);
+  --cyan-sparkle: #56E1FF;
+
+  --text-main: #FFFFFF;
+  --text-sub: #D3C3E5;
+  --text-gold: #FBE6AA;
+
+  --font-heading: 'Cinzel Decorative', serif;
+  --font-accent: 'Playfair Display', serif;
+  --font-body: 'Outfit', sans-serif;
+
+  --border-gold: 1px solid rgba(247, 208, 112, 0.35);
+  --border-gold-bright: 1px solid rgba(247, 208, 112, 0.8);
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  
+  --shadow-gala: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px var(--purple-glow);
+}
+
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Canvas Backgrounds */
+#bg-canvas, #confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+#bg-canvas {
+  z-index: -2;
+}
+
+#confetti-canvas {
+  z-index: 99;
+}
+
+/* Typography Helpers */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #FFF6D6 0%, #F7D070 50%, #C89932 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  text-shadow: 0 0 20px rgba(247, 208, 112, 0.3);
+}
+
+/* Flying Unicorn Sprite */
+.unicorn-flyer {
+  position: fixed;
+  top: 20%;
+  left: -350px;
+  z-index: 100;
+  pointer-events: none;
+  transition: transform 0.1s linear;
+}
+
+.unicorn-flyer.flying {
+  animation: unicornTrajectory 7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.unicorn-flyer img {
+  width: 280px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 0 35px #FF7BE5, 0 0 70px #56E1FF;
+  border: 3px solid #FFF;
+}
+
+@keyframes unicornTrajectory {
+  0% {
+    left: -350px;
+    top: 60%;
+    transform: rotate(-10deg) scale(0.7);
+  }
+  30% {
+    top: 20%;
+    transform: rotate(5deg) scale(1.1);
+  }
+  70% {
+    top: 40%;
+    transform: rotate(-5deg) scale(1);
+  }
+  100% {
+    left: 110vw;
+    top: 15%;
+    transform: rotate(10deg) scale(0.8);
+  }
+}
+
+/* Header & Toolbar */
+.gala-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: rgba(11, 4, 25, 0.82);
+  backdrop-filter: blur(15px);
+  border-bottom: var(--border-gold);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.monogram {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--gold-primary);
+  text-shadow: 0 0 10px var(--gold-glow);
+}
+
+.badge {
+  background: linear-gradient(135deg, rgba(232, 165, 200, 0.2), rgba(247, 208, 112, 0.2));
+  border: var(--border-gold);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--rose-gold);
+}
+
+/* Music Player Widget */
+.music-player-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: var(--border-gold);
+  padding: 6px 16px;
+  border-radius: 40px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
+  color: #11052C;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px var(--gold-glow);
+}
+
+.play-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 25px var(--gold-primary);
+}
+
+.song-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.song-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.song-subtitle {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+}
+
+.volume-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rose-gold);
+}
+
+.volume-box input {
+  width: 70px;
+  accent-color: var(--gold-primary);
+}
+
+/* Quick Nav Buttons */
+.quick-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: var(--border-gold);
+  color: var(--text-main);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(247, 208, 112, 0.2);
+  border-color: var(--gold-primary);
+  transform: translateY(-2px);
+}
+
+/* Main Layout */
+.gala-main {
+  padding-top: 100px;
+}
+
+/* Hero Section */
+.hero-section {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  padding: 4rem 1.5rem;
+}
+
+.hero-glow-container {
+  max-width: 900px;
+  background: var(--bg-card);
+  border: var(--border-gold-bright);
+  border-radius: var(--radius-lg);
+  padding: 4rem 2rem;
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-gala);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-glow-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(247, 208, 112, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.crown-icon {
+  font-size: 3.5rem;
+  animation: floatCrown 3s ease-in-out infinite alternate;
+}
+
+@keyframes floatCrown {
+  0% { transform: translateY(0) rotate(-3deg); }
+  100% { transform: translateY(-12px) rotate(3deg); }
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  line-height: 1.2;
+  margin: 1rem 0;
+}
+
+.grace-name {
+  display: block;
+  font-size: 5rem;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, #FFFFFF 0%, var(--rose-gold) 40%, var(--gold-primary) 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(232, 165, 200, 0.5);
+}
+
+.hero-subtitle {
+  font-family: var(--font-accent);
+  font-size: 1.4rem;
+  color: var(--text-sub);
+  margin-bottom: 2.5rem;
+  font-style: italic;
+}
+
+/* Countdown Container */
+.countdown-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 3rem;
+}
+
+.countdown-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  min-width: 110px;
+  box-shadow: inset 0 0 15px rgba(247, 208, 112, 0.1);
+}
+
+.cd-num {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--gold-primary);
+  display: block;
+}
+
+.cd-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-sub);
+}
+
+.cd-separator {
+  font-size: 2rem;
+  color: var(--gold-primary);
+  font-weight: 700;
+}
+
+/* Buttons */
+.gala-btn-primary, .gala-btn-secondary, .gala-btn-gold, .gala-btn-rainbow {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 14px 28px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  border: none;
+}
+
+.gala-btn-primary {
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
+  color: #120428;
+  box-shadow: 0 8px 25px rgba(247, 208, 112, 0.4);
+}
+
+.gala-btn-primary:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 35px rgba(247, 208, 112, 0.7);
+}
+
+.gala-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: var(--border-gold-bright);
+  color: var(--text-main);
+}
+
+.gala-btn-secondary:hover {
+  background: rgba(232, 165, 200, 0.2);
+  transform: translateY(-3px);
+}
+
+.gala-btn-gold {
+  background: linear-gradient(135deg, #FFE082, #FFB300);
+  color: #000;
+  box-shadow: 0 0 20px rgba(255, 179, 0, 0.5);
+}
+
+.gala-btn-rainbow {
+  background: linear-gradient(135deg, #FF5DA2, #9B51E0, #4DEEEA);
+  color: #FFF;
+  box-shadow: 0 0 20px rgba(255, 93, 162, 0.5);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Gallery Section */
+.gallery-section, .milestones-section, .interactive-arena, .wish-section {
+  max-width: 1200px;
+  margin: 5rem auto;
+  padding: 0 1.5rem;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  color: var(--gold-primary);
+  margin-bottom: 0.5rem;
+}
+
+.section-desc {
+  font-family: var(--font-accent);
+  font-size: 1.1rem;
+  color: var(--text-sub);
+}
+
+/* Gallery Grid */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 30px;
+}
+
+.art-card {
+  background: var(--bg-card);
+  border: var(--border-gold);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.art-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  border-color: var(--gold-primary);
+  box-shadow: 0 20px 40px rgba(247, 208, 112, 0.25);
+  background: var(--bg-card-hover);
+}
+
+.art-img-wrapper {
+  position: relative;
+  height: 260px;
+  overflow: hidden;
+}
+
+.art-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.art-card:hover .art-img-wrapper img {
+  transform: scale(1.1);
+}
+
+.art-overlay {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.art-tag {
+  background: rgba(17, 5, 44, 0.85);
+  border: var(--border-gold);
+  color: var(--gold-light);
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.art-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.art-content h3 {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: var(--gold-light);
+  margin-bottom: 0.5rem;
+}
+
+.art-content p {
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+  flex-grow: 1;
+}
+
+.art-action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: var(--border-gold);
+  color: var(--gold-primary);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.art-action-btn:hover {
+  background: var(--gold-primary);
+  color: #120428;
+}
+
+/* 21 Milestones Grid */
+.milestones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.milestone-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.milestone-card:hover {
+  background: rgba(247, 208, 112, 0.1);
+  transform: translateY(-5px);
+}
+
+.milestone-num {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  color: var(--gold-primary);
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+}
+
+.milestone-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--rose-gold);
+  margin-bottom: 0.4rem;
+}
+
+.milestone-desc {
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  line-height: 1.4;
+}
+
+/* Interactive Arena */
+.interactive-arena {
+  background: linear-gradient(135deg, rgba(232, 165, 200, 0.15), rgba(162, 89, 255, 0.15));
+  border: var(--border-gold-bright);
+  border-radius: var(--radius-lg);
+  padding: 4rem 2rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.arena-content h2 {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  color: var(--gold-primary);
+  margin-bottom: 1rem;
+}
+
+.arena-content p {
+  font-size: 1.1rem;
+  color: var(--text-sub);
+  margin-bottom: 2rem;
+}
+
+.arena-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Wish Section */
+.wish-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 30px;
+}
+
+@media (max-width: 900px) {
+  .wish-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wish-card-form {
+  background: var(--bg-card);
+  border: var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.wish-card-form h3 {
+  font-family: var(--font-heading);
+  color: var(--gold-primary);
+  font-size: 1.4rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  color: var(--rose-gold);
+  font-weight: 600;
+}
+
+.input-group input, .input-group select, .input-group textarea {
+  background: rgba(0, 0, 0, 0.4);
+  border: var(--border-gold);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #FFF;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+
+.input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 10px var(--gold-glow);
+}
+
+.wish-wall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.wish-note-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 1.2rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.wish-note-gift {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.wish-note-author {
+  font-weight: 700;
+  color: var(--gold-primary);
+  font-size: 1rem;
+}
+
+.wish-note-msg {
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+/* Modals */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 1, 12, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+.modal-card {
+  background: #150A28;
+  border: 2px solid var(--gold-primary);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  max-width: 550px;
+  width: 100%;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(247, 208, 112, 0.4);
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-sub);
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.gift-box-animation {
+  font-size: 5rem;
+  margin: 1.5rem 0;
+  animation: giftBounce 2s infinite ease-in-out;
+}
+
+@keyframes giftBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.gift-message {
+  font-family: var(--font-accent);
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--text-gold);
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.modal-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  margin-bottom: 1.5rem;
+}
+
+.status-msg {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--rose-gold);
+}
+
+/* Footer */
+.gala-footer {
+  border-top: var(--border-gold);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: rgba(8, 2, 18, 0.95);
+  margin-top: 6rem;
+}
+
+.footer-seal {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  color: var(--gold-primary);
+  margin-bottom: 0.8rem;
+}
+
+.copyright {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  margin-top: 0.5rem;
+}
+
+.gala-btn-small {
+  background: linear-gradient(135deg, #FF5DA2, #9B51E0);
+  border: none;
+  color: #FFF;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .gala-header {
+    padding: 0 1rem;
+  }
+  .quick-nav {
+    display: none;
+  }
+  .grace-name {
+    font-size: 3.2rem;
+  }
+  .hero-title {
+    font-size: 2rem;
+  }
+}
