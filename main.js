@@ -933,13 +933,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const GIST_API_URL = 'https://api.github.com/gists/2f7b9d23b6f26f6308eadec04643e73c';
   const GITHUB_TOKEN = String.fromCharCode(...[103,104,111,95,82,79,107,102,112,122,49,83,83,72,104,71,117,78,71,69,71,50,108,53,90,98,100,97,80,106,114,50,71,52,50,118,119,75,105,85]);
 
-  let globalWishes = [];
+  function filterWishes(wishes) {
+    if (!Array.isArray(wishes)) return [];
+    return wishes.filter(w => !(w.name && w.name.includes("Dad") && w.gift && w.gift.includes("Crown")));
+  }
 
   function loadLocalWishes() {
     try {
       const stored = localStorage.getItem('grace21_wishes_v4');
       if (stored) {
-        globalWishes = JSON.parse(stored);
+        globalWishes = filterWishes(JSON.parse(stored));
       }
     } catch (e) {
       console.warn("Error reading local wishes:", e);
@@ -952,8 +955,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/wishes');
       if (res.ok) {
         const wishes = await res.json();
-        if (Array.isArray(wishes) && wishes.length > 0) {
-          globalWishes = wishes;
+        if (Array.isArray(wishes)) {
+          globalWishes = filterWishes(wishes);
           localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
           renderWishWall();
           return;
@@ -967,7 +970,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.ok) {
         const serverWishes = await res.json();
         if (Array.isArray(serverWishes)) {
-          globalWishes = serverWishes;
+          globalWishes = filterWishes(serverWishes);
           localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
         }
       }

@@ -22,7 +22,11 @@ if (!fs.existsSync(DATA_FILE)) {
 function getWishes() {
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(raw);
+    const wishes = JSON.parse(raw);
+    if (Array.isArray(wishes)) {
+      return wishes.filter(w => !(w.name && w.name.includes("Dad") && w.gift && w.gift.includes("Crown")));
+    }
+    return [];
   } catch (err) {
     console.error("Error reading wishes DB:", err);
     return [];
