@@ -924,60 +924,74 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 8. GLOBAL PERSISTENT GUEST WISH WALL (DUAL BACKEND ENGINE)
+  // 8. GLOBAL PERSISTENT GUEST WISH WALL (ROBUST HYBRID ENGINE)
   // --------------------------------------------------------------------------
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
-
   const GIST_RAW_URL = 'https://gist.githubusercontent.com/brentboltongmail/2f7b9d23b6f26f6308eadec04643e73c/raw/grace21_wishes.json';
-  const GIST_API_URL = 'https://api.github.com/gists/2f7b9d23b6f26f6308eadec04643e73c';
-  const GITHUB_TOKEN = String.fromCharCode(...[103,104,111,95,82,79,107,102,112,122,49,83,83,72,104,71,117,78,71,69,71,50,108,53,90,98,100,97,80,106,114,50,71,52,50,118,119,75,105,85]);
 
-  function loadLocalWishes() {
+  let globalWishes = [];
+
+  function getLocalWishes() {
     try {
-      const stored = localStorage.getItem('grace21_wishes_v4');
-      if (stored) {
-        globalWishes = JSON.parse(stored);
+      const stored = localStorage.getItem('grace21_wishes_v5');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  }
+
+  function mergeWishLists(listA, listB) {
+    const map = new Map();
+    [...listA, ...listB].forEach(w => {
+      if (w && w.name && w.msg) {
+        const key = `${w.name.trim()}_${w.msg.trim()}`;
+        if (!map.has(key)) {
+          map.set(key, w);
+        }
       }
-    } catch (e) {
-      console.warn("Error reading local wishes:", e);
-    }
+    });
+    return Array.from(map.values());
   }
 
   async function fetchGlobalWishes() {
-    // 1. Try local Express server endpoint first
+    const local = getLocalWishes();
+    let incoming = [];
+
+    // 1. Try Express backend server endpoint
     try {
       const res = await fetch('/api/wishes');
       if (res.ok) {
-        const wishes = await res.json();
-        if (Array.isArray(wishes)) {
-          globalWishes = wishes;
-          localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
-          renderWishWall();
-          return;
-        }
+        const data = await res.json();
+        if (Array.isArray(data)) incoming = data;
       }
     } catch (e) {}
 
-    // 2. Fallback to Gist raw URL for static deployments
-    try {
-      const res = await fetch(`${GIST_RAW_URL}?t=${Date.now()}`);
-      if (res.ok) {
-        const serverWishes = await res.json();
-        if (Array.isArray(serverWishes)) {
-          globalWishes = serverWishes;
-          localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
+    // 2. Fallback to Gist raw URL if backend endpoint unavailable
+    if (incoming.length === 0) {
+      try {
+        const res = await fetch(`${GIST_RAW_URL}?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) incoming = data;
         }
-      }
-    } catch (err) {
-      console.warn("Gist fetch offline, using local storage fallback:", err);
-      loadLocalWishes();
+      } catch (e) {}
     }
+
+    // Merge incoming server wishes with local wishes so locally posted wishes are NEVER lost
+    globalWishes = mergeWishLists(incoming, local);
+    localStorage.setItem('grace21_wishes_v5', JSON.stringify(globalWishes));
     renderWishWall();
   }
 
   async function saveGlobalWish(newWish) {
-    // 1. Send to Express backend /api/wishes
+    // 1. Instantly save to local state and localStorage
+    const local = getLocalWishes();
+    local.unshift(newWish);
+    globalWishes = mergeWishLists([newWish], globalWishes);
+    localStorage.setItem('grace21_wishes_v5', JSON.stringify(globalWishes));
+    renderWishWall();
+
+    // 2. Post to Express backend server
     try {
       const res = await fetch('/api/wishes', {
         method: 'POST',
@@ -985,35 +999,15 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(newWish)
       });
       if (res.ok) {
-        const updatedWishes = await res.json();
-        if (Array.isArray(updatedWishes)) {
-          globalWishes = updatedWishes;
-          localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
+        const updated = await res.json();
+        if (Array.isArray(updated)) {
+          globalWishes = mergeWishLists(updated, globalWishes);
+          localStorage.setItem('grace21_wishes_v5', JSON.stringify(globalWishes));
           renderWishWall();
         }
       }
     } catch (err) {
-      console.warn("Could not sync to local API backend:", err);
-    }
-
-    // 2. Also try GitHub Gist update
-    try {
-      await fetch(GIST_API_URL, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          files: {
-            'grace21_wishes.json': {
-              content: JSON.stringify(globalWishes, null, 2)
-            }
-          }
-        })
-      });
-    } catch (err) {
-      console.warn("Gist sync notice:", err);
+      console.warn("Express backend offline, saved in local storage:", err);
     }
   }
 
@@ -1056,26 +1050,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!name || !msg) return;
 
-    loadLocalWishes();
-
     const newWish = { name, gift, msg, date: new Date().toISOString() };
-    globalWishes.unshift(newWish);
-    localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
 
-    renderWishWall();
     wishForm.reset();
     triggerConfettiBurst(width * 0.75, height * 0.75, 100);
 
-    // Save wish to backend database
+    // Save wish
     await saveGlobalWish(newWish);
   });
 
-  // Load local wishes instantly on startup
-  loadLocalWishes();
+  // Initial load
+  globalWishes = getLocalWishes();
   renderWishWall();
-
-  // Fetch initial global wishes on load and poll every 10 seconds automatically for live updates across all devices
   fetchGlobalWishes();
+
+  // Poll every 10 seconds for live updates
   setInterval(fetchGlobalWishes, 10000);
 
   // --------------------------------------------------------------------------
