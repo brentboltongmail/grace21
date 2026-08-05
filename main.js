@@ -584,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 5. INTERACTIVE FLYING UNICORN ENGINE
+  // 5. INTERACTIVE FLYING UNICORN ENGINE & CARD ACTIONS
   // --------------------------------------------------------------------------
   const unicornFlyer = document.getElementById('unicorn-flyer');
   const btnLaunchUnicorn = document.getElementById('btn-launch-unicorn');
@@ -606,6 +606,251 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnLaunchUnicorn.addEventListener('click', launchUnicornFlight);
   launchTriggers.forEach(btn => btn.addEventListener('click', launchUnicornFlight));
+
+  // Sound Synth for Balloon Pop
+  function playPopSound() {
+    initAudioContext();
+    if (!audioCtx) return;
+
+    // Pop Pitch Drop
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.08);
+
+    const vol = parseFloat(volumeSlider.value);
+    gain.gain.setValueAtTime(vol * 0.9, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.08);
+
+    // Click Noise
+    const bufferSize = audioCtx.sampleRate * 0.05;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(vol * 0.7, audioCtx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+
+    noise.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    noise.start();
+  }
+
+  // Floating Balloons Spawner & Pop Trigger
+  const popBalloonsTriggers = document.querySelectorAll('.pop-balloons-trigger');
+  
+  function spawnAndPopBalloons() {
+    initAudioContext();
+
+    // Spawn 18 interactive floating balloon elements
+    const balloonColors = ['#FF5DA2', '#F7D070', '#E8A5C8', '#56E1FF', '#9B51E0', '#FFD700'];
+    
+    for (let i = 0; i < 18; i++) {
+      setTimeout(() => {
+        const balloon = document.createElement('div');
+        balloon.className = 'interactive-balloon';
+        const color = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+        const size = Math.floor(Math.random() * 30) + 50;
+        const startX = Math.random() * (width - 100) + 50;
+
+        balloon.style.cssText = `
+          position: fixed;
+          bottom: -100px;
+          left: ${startX}px;
+          width: ${size}px;
+          height: ${size * 1.2}px;
+          background: radial-gradient(circle at 30% 30%, #FFF, ${color} 70%);
+          border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+          box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 15px ${color};
+          cursor: pointer;
+          z-index: 150;
+          transition: transform 0.1s ease;
+          animation: floatUpBalloon ${Math.random() * 3 + 4}s linear forwards;
+        `;
+
+        // Ribbon
+        const ribbon = document.createElement('div');
+        ribbon.style.cssText = `
+          position: absolute;
+          bottom: -20px;
+          left: 50%;
+          width: 2px;
+          height: 25px;
+          background: rgba(255,255,255,0.7);
+          transform: translateX(-50%);
+        `;
+        balloon.appendChild(ribbon);
+
+        // Click to pop
+        function popThisBalloon(e) {
+          if (e) e.stopPropagation();
+          playPopSound();
+          const rect = balloon.getBoundingClientRect();
+          triggerConfettiBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, 40);
+          balloon.remove();
+        }
+
+        balloon.addEventListener('click', popThisBalloon);
+        balloon.addEventListener('touchstart', popThisBalloon);
+
+        document.body.appendChild(balloon);
+
+        // Auto pop or clean up if reached top
+        setTimeout(() => {
+          if (document.body.contains(balloon)) {
+            popThisBalloon();
+          }
+        }, (Math.random() * 3000) + 3500);
+
+      }, i * 180);
+    }
+  }
+
+  popBalloonsTriggers.forEach(btn => btn.addEventListener('click', spawnAndPopBalloons));
+
+  // Candle Sparkler Fountain
+  function triggerCandleSparklerFountain(originX = width / 2, originY = height / 2) {
+    const candleSymbols = ['🕯️', '✨', '🔥', '🎂', '⭐', '✨', '💫'];
+    for (let i = 0; i < 21; i++) {
+      const candleSpark = document.createElement('div');
+      candleSpark.className = 'candle-spark-particle';
+      candleSpark.textContent = candleSymbols[Math.floor(Math.random() * candleSymbols.length)];
+      const startX = originX + (Math.random() * 120 - 60);
+      const startY = originY;
+
+      candleSpark.style.cssText = `
+        position: fixed;
+        left: ${startX}px;
+        top: ${startY}px;
+        font-size: ${Math.random() * 22 + 18}px;
+        pointer-events: none;
+        z-index: 200;
+        transition: transform 1.5s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 1.5s ease-out;
+        opacity: 1;
+        filter: drop-shadow(0 0 12px #FFD700);
+      `;
+
+      document.body.appendChild(candleSpark);
+
+      setTimeout(() => {
+        const moveX = (Math.random() - 0.5) * 300;
+        const moveY = -(Math.random() * 280 + 100);
+        candleSpark.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.8) rotate(${Math.random() * 360}deg)`;
+        candleSpark.style.opacity = '0';
+      }, 20);
+
+      setTimeout(() => {
+        if (document.body.contains(candleSpark)) candleSpark.remove();
+      }, 1600);
+    }
+
+    triggerConfettiBurst(originX, originY, 150);
+  }
+
+  // Sparkle Candles Trigger (Royal Cake)
+  const lightCakeTriggers = document.querySelectorAll('.light-cake-trigger');
+  lightCakeTriggers.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      initAudioContext();
+      playMagicGlissandoSound();
+      const rect = btn.getBoundingClientRect();
+      triggerCandleSparklerFountain(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance("Blow out your 21 candles Grace and make a magical wish!");
+        utter.pitch = 1.25;
+        utter.volume = parseFloat(volumeSlider.value);
+        window.speechSynthesis.speak(utter);
+      }
+    });
+  });
+
+  // Sound Synth for Magic Chime Glissando
+  function playMagicGlissandoSound() {
+    initAudioContext();
+    if (!audioCtx) return;
+
+    const chimeFreqs = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00, 2637.02];
+    const vol = parseFloat(volumeSlider.value) * 0.4;
+
+    chimeFreqs.forEach((freq, idx) => {
+      setTimeout(() => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(vol, audioCtx.currentTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      }, idx * 60);
+    });
+  }
+
+  // Fairy Dust Particle Shower
+  function triggerFairyDustShower(originX = width / 2, originY = height / 2) {
+    const symbols = ['✨', '⭐', '💖', '🌟', '💫', '✨'];
+    for (let i = 0; i < 25; i++) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'fairy-dust-particle';
+      sparkle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      const startX = originX + (Math.random() * 200 - 100);
+      const startY = originY + (Math.random() * 100 - 50);
+
+      sparkle.style.cssText = `
+        position: fixed;
+        left: ${startX}px;
+        top: ${startY}px;
+        font-size: ${Math.random() * 20 + 16}px;
+        pointer-events: none;
+        z-index: 200;
+        transition: transform 1.2s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 1.2s ease-out;
+        opacity: 1;
+        filter: drop-shadow(0 0 10px #F7D070);
+      `;
+
+      document.body.appendChild(sparkle);
+
+      setTimeout(() => {
+        const moveX = (Math.random() - 0.5) * 250;
+        const moveY = -(Math.random() * 200 + 80);
+        sparkle.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.6) rotate(${Math.random() * 360}deg)`;
+        sparkle.style.opacity = '0';
+      }, 20);
+
+      setTimeout(() => {
+        if (document.body.contains(sparkle)) sparkle.remove();
+      }, 1300);
+    }
+
+    // Also trigger canvas confetti burst at button position
+    triggerConfettiBurst(originX, originY, 120);
+  }
+
+  // Sprinkle Magic Dust Trigger (Cupcakes)
+  const confettiTriggers = document.querySelectorAll('.confetti-trigger');
+  confettiTriggers.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      playMagicGlissandoSound();
+      const rect = btn.getBoundingClientRect();
+      triggerFairyDustShower(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    });
+  });
 
   // --------------------------------------------------------------------------
   // 6. CHAMPAGNE & FIREWORKS BUTTON TRIGGERS

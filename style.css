@@ -123,6 +123,20 @@ body {
   }
 }
 
+@keyframes floatUpBalloon {
+  0% {
+    bottom: -120px;
+    transform: translateX(0) scale(0.8) rotate(0deg);
+  }
+  50% {
+    transform: translateX(25px) scale(1.05) rotate(5deg);
+  }
+  100% {
+    bottom: 110vh;
+    transform: translateX(-20px) scale(1) rotate(-5deg);
+  }
+}
+
 /* Header & Toolbar */
 .gala-header {
   position: fixed;
