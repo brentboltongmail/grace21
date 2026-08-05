@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadWishes();
 
   // --------------------------------------------------------------------------
-  // 9. PRESENT MODAL
+  // 9. PRESENT MODAL & 21 CANDLES CEREMONY MODAL
   // --------------------------------------------------------------------------
   const giftModal = document.getElementById('gift-modal');
   const btnUnwrap = document.getElementById('btn-unwrap-present');
@@ -1007,6 +1007,112 @@ document.addEventListener('DOMContentLoaded', () => {
 
   giftModalClose.addEventListener('click', () => giftModal.classList.add('hidden'));
   btnSingSpeech.addEventListener('click', triggerVocalSpeech);
+
+  // 21 Candles Ceremony
+  const candleModal = document.getElementById('candle-modal');
+  const btnLightCandles = document.getElementById('btn-light-candles');
+  const candleModalClose = document.getElementById('candle-modal-close');
+  const btnDoBlowCandles = document.getElementById('btn-do-blow-candles');
+  const candlesGrid = document.getElementById('candles-grid');
+  const candleStatus = document.getElementById('candle-status');
+
+  function playBlowPuffSound() {
+    initAudioContext();
+    if (!audioCtx) return;
+
+    const bufferSize = audioCtx.sampleRate * 0.5;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * 0.5;
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(400, audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.5);
+
+    const gain = audioCtx.createGain();
+    const vol = parseFloat(volumeSlider.value);
+    gain.gain.setValueAtTime(vol * 0.8, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+  }
+
+  function init21CandlesDisplay() {
+    if (!candlesGrid) return;
+    candlesGrid.innerHTML = '';
+    for (let i = 1; i <= 21; i++) {
+      const item = document.createElement('div');
+      item.className = 'candle-item';
+      item.innerHTML = `
+        <div class="flame lit" id="candle-flame-${i}">🔥</div>
+        <div class="candle-stick"></div>
+      `;
+      item.addEventListener('click', () => blowOutSingleCandle(i));
+      candlesGrid.appendChild(item);
+    }
+    if (candleStatus) candleStatus.textContent = "21 glowing candles are lit for Grace's 21st birthday!";
+  }
+
+  function blowOutSingleCandle(idx) {
+    const flame = document.getElementById(`candle-flame-${idx}`);
+    if (flame && flame.classList.contains('lit')) {
+      playBlowPuffSound();
+      flame.className = 'flame blown';
+      flame.textContent = '💨';
+    }
+  }
+
+  function blowOutAll21Candles() {
+    playBlowPuffSound();
+    for (let i = 1; i <= 21; i++) {
+      setTimeout(() => {
+        const flame = document.getElementById(`candle-flame-${i}`);
+        if (flame) {
+          flame.className = 'flame blown';
+          flame.textContent = '💨';
+        }
+      }, i * 60);
+    }
+
+    setTimeout(() => {
+      triggerCandleSparklerFountain(width / 2, height / 2);
+      if (candleStatus) candleStatus.innerHTML = "<span style='color:#F7D070; font-weight:700;'>✨ GRACE BLEW OUT ALL 21 CANDLES! May all your birthday wishes come true!</span>";
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance("Grace blew out all 21 candles! May every single 21st birthday wish come true!");
+        utter.pitch = 1.3;
+        utter.volume = parseFloat(volumeSlider.value);
+        window.speechSynthesis.speak(utter);
+      }
+    }, 1300);
+  }
+
+  if (btnLightCandles) {
+    btnLightCandles.addEventListener('click', () => {
+      init21CandlesDisplay();
+      if (candleModal) candleModal.classList.remove('hidden');
+    });
+  }
+
+  if (candleModalClose) {
+    candleModalClose.addEventListener('click', () => {
+      if (candleModal) candleModal.classList.add('hidden');
+    });
+  }
+
+  if (btnDoBlowCandles) {
+    btnDoBlowCandles.addEventListener('click', blowOutAll21Candles);
+  }
 
   // --------------------------------------------------------------------------
   // 10. AUTO-PLAY MUSIC & AUTO-TOUR ENGINE
