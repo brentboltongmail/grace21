@@ -1008,14 +1008,4 @@ document.addEventListener('DOMContentLoaded', () => {
   giftModalClose.addEventListener('click', () => giftModal.classList.add('hidden'));
   btnSingSpeech.addEventListener('click', triggerVocalSpeech);
 
-  // --------------------------------------------------------------------------
-  // 10. COUNTDOWN TIMER TICKER
-  // --------------------------------------------------------------------------
-  let secCounter = 0;
-  setInterval(() => {
-    secCounter = (secCounter + 1) % 60;
-    const cdSecs = document.getElementById('cd-secs');
-    if (cdSecs) cdSecs.textContent = secCounter < 10 ? `0${secCounter}` : `${secCounter}`;
-  }, 1000);
-
 });
