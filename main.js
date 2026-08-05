@@ -932,8 +932,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const defaultWishes = [];
 
   function loadWishes() {
-    const stored = localStorage.getItem('grace21_wishes');
-    const wishes = stored ? JSON.parse(stored) : defaultWishes;
+    // Clear old v1 key if present
+    localStorage.removeItem('grace21_wishes');
+
+    const stored = localStorage.getItem('grace21_wishes_v2');
+    let wishes = stored ? JSON.parse(stored) : defaultWishes;
+
+    // Ensure no old example cards remain
+    wishes = wishes.filter(w => w.name !== "Dad (Brent)" && w.name !== "Mom" && w.name !== "Bestie Squad");
+    localStorage.setItem('grace21_wishes_v2', JSON.stringify(wishes));
+
     wishWall.innerHTML = '';
     
     if (wishes.length === 0) {
@@ -972,10 +980,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!name || !msg) return;
 
-    const stored = localStorage.getItem('grace21_wishes');
-    const wishes = stored ? JSON.parse(stored) : [...defaultWishes];
+    const stored = localStorage.getItem('grace21_wishes_v2');
+    const wishes = stored ? JSON.parse(stored) : [];
     wishes.unshift({ name, gift, msg });
-    localStorage.setItem('grace21_wishes', JSON.stringify(wishes));
+    localStorage.setItem('grace21_wishes_v2', JSON.stringify(wishes));
 
     loadWishes();
     wishForm.reset();
