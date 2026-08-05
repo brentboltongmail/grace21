@@ -944,18 +944,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function fetchGlobalWishes() {
-    loadLocalWishes();
     try {
       const res = await fetch(WISH_API_URL);
       if (res.ok) {
         const serverWishes = await res.json();
-        if (Array.isArray(serverWishes) && serverWishes.length > 0) {
+        if (Array.isArray(serverWishes)) {
           globalWishes = serverWishes;
           localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
         }
       }
     } catch (err) {
       console.warn("Server API offline or static mode, relying on local storage:", err);
+      loadLocalWishes();
     }
     renderWishWall();
   }
