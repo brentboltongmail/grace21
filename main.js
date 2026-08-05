@@ -924,7 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 8. GLOBAL PERSISTENT GUEST WISH WALL (BACKEND API + LOCAL CACHE)
+  // 8. GLOBAL PERSISTENT GUEST WISH WALL (BULLETPROOF HYBRID STORAGE)
   // --------------------------------------------------------------------------
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
@@ -932,20 +932,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let globalWishes = [];
 
+  function loadLocalWishes() {
+    try {
+      const stored = localStorage.getItem('grace21_wishes_v3');
+      if (stored) {
+        globalWishes = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn("Error reading local wishes:", e);
+    }
+  }
+
   async function fetchGlobalWishes() {
+    loadLocalWishes();
     try {
       const res = await fetch(WISH_API_URL);
       if (res.ok) {
-        const wishes = await res.json();
-        if (Array.isArray(wishes)) {
-          globalWishes = wishes;
+        const serverWishes = await res.json();
+        if (Array.isArray(serverWishes) && serverWishes.length > 0) {
+          globalWishes = serverWishes;
           localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
         }
       }
     } catch (err) {
-      console.warn("Using local fallback cache for wishes:", err);
-      const stored = localStorage.getItem('grace21_wishes_v3');
-      if (stored) globalWishes = JSON.parse(stored);
+      console.warn("Server API offline or static mode, relying on local storage:", err);
     }
     renderWishWall();
   }
@@ -962,10 +972,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Array.isArray(updatedWishes)) {
           globalWishes = updatedWishes;
           localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
+          renderWishWall();
         }
       }
     } catch (err) {
-      console.error("Failed to sync wish to server backend:", err);
+      console.warn("Could not sync to remote API, wish remains safely in local storage:", err);
     }
   }
 
@@ -1008,6 +1019,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!name || !msg) return;
 
+    loadLocalWishes();
+
     const newWish = { name, gift, msg, date: new Date().toISOString() };
     globalWishes.unshift(newWish);
     localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
@@ -1020,9 +1033,13 @@ document.addEventListener('DOMContentLoaded', () => {
     await saveGlobalWish(newWish);
   });
 
-  // Fetch initial global wishes on load and poll every 6 seconds for live updates
+  // Load local wishes instantly on startup
+  loadLocalWishes();
+  renderWishWall();
+
+  // Fetch initial global wishes on load and poll every 8 seconds for live updates
   fetchGlobalWishes();
-  setInterval(fetchGlobalWishes, 6000);
+  setInterval(fetchGlobalWishes, 8000);
 
   // --------------------------------------------------------------------------
   // 9. PRESENT MODAL & 21 CANDLES CEREMONY MODAL
