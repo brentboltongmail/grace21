@@ -953,6 +953,32 @@ document.addEventListener('DOMContentLoaded', () => {
     return Array.from(map.values());
   }
 
+  // Automatic retry sync engine: checks local wishes and ensures every local wish is synced to the server DB
+  async function syncUnsyncedLocalWishes(serverList) {
+    const local = getLocalWishes();
+    if (!local || local.length === 0) return;
+
+    const serverKeys = new Set(serverList.map(w => `${w.name.trim()}_${w.msg.trim()}`));
+
+    for (const wish of local) {
+      const key = `${wish.name.trim()}_${wish.msg.trim()}`;
+      if (!serverKeys.has(key)) {
+        try {
+          const res = await fetch('/api/wishes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(wish)
+          });
+          if (res.ok) {
+            console.log("⚡ Auto-synced unsynced local wish to server DB:", wish.name);
+          }
+        } catch (e) {
+          console.warn("Server DB retry pending:", e);
+        }
+      }
+    }
+  }
+
   async function fetchGlobalWishes() {
     const local = getLocalWishes();
     let incoming = [];
@@ -962,7 +988,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/wishes');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) incoming = data;
+        if (Array.isArray(data)) {
+          incoming = data;
+          // Auto-resync any local wishes that are missing on the server!
+          syncUnsyncedLocalWishes(incoming);
+        }
       }
     } catch (e) {}
 
