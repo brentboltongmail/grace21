@@ -933,11 +933,27 @@ document.addEventListener('DOMContentLoaded', () => {
   let globalWishes = [];
 
   function getLocalWishes() {
-    try {
-      const stored = localStorage.getItem('grace21_wishes_v5');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    return [];
+    let all = [];
+
+    // Scan all localStorage keys dynamically for any saved wishes
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.includes('grace21')) {
+        try {
+          const stored = localStorage.getItem(k);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              all = [...all, ...parsed];
+            } else if (parsed && typeof parsed === 'object' && parsed.name && parsed.msg) {
+              all.push(parsed);
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    return mergeWishLists([], all);
   }
 
   function mergeWishLists(listA, listB) {
