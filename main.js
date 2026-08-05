@@ -684,16 +684,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
 
-  const defaultWishes = [
-    { name: "Dad (Brent)", gift: "👑 Golden Crown", msg: "Happy 21st Birthday Grace! You are my greatest joy. Keep shining your brilliant light on the world!" },
-    { name: "Mom", gift: "🌹 Royal Rose Bouquet", msg: "To my sweet Grace: 21 years of watching you grow has been the honor of my life. Love you beyond words!" },
-    { name: "Bestie Squad", gift: "🥂 Champagne Toast", msg: "GRACE IS 21!! Time to celebrate the queen of the universe! Let's make this year unforgettable!" }
-  ];
+  const defaultWishes = [];
 
   function loadWishes() {
     const stored = localStorage.getItem('grace21_wishes');
     const wishes = stored ? JSON.parse(stored) : defaultWishes;
     wishWall.innerHTML = '';
+    
+    if (wishes.length === 0) {
+      wishWall.innerHTML = `
+        <div class="wish-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: rgba(255, 255, 255, 0.02); border: var(--border-gold); border-radius: var(--radius-md);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✍️✨</div>
+          <p style="font-family: var(--font-accent); font-size: 1.1rem; color: var(--text-sub);">Be the first to post a birthday wish for Grace!</p>
+        </div>
+      `;
+      return;
+    }
+
     wishes.forEach(w => {
       const card = document.createElement('div');
       card.className = 'wish-note-card';
