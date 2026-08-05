@@ -999,20 +999,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const local = getLocalWishes();
     let incoming = [];
 
-    // 1. Try Express backend server endpoint
+    // 1. Try Express backend / static endpoint /api/wishes
     try {
       const res = await fetch('/api/wishes');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) {
-          incoming = data;
-          // Auto-resync any local wishes that are missing on the server!
-          syncUnsyncedLocalWishes(incoming);
-        }
+        if (Array.isArray(data)) incoming = data;
       }
     } catch (e) {}
 
-    // 2. Fallback to Gist raw URL if backend endpoint unavailable
+    // 2. Try static endpoint /api/wishes.json
+    if (incoming.length === 0) {
+      try {
+        const res = await fetch('/api/wishes.json');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) incoming = data;
+        }
+      } catch (e) {}
+    }
+
+    // 3. Fallback to Gist raw URL if static fallback needed
     if (incoming.length === 0) {
       try {
         const res = await fetch(`${GIST_RAW_URL}?t=${Date.now()}`);
