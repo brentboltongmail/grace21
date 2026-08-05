@@ -924,27 +924,53 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 8. GUEST WISH WALL (LOCAL STORAGE)
+  // 8. GLOBAL PERSISTENT GUEST WISH WALL (CLOUD BACKEND + LOCAL CACHE)
   // --------------------------------------------------------------------------
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
+  const WISH_API_URL = 'https://api.restful-api.dev/objects/ff8081819f7e10ae019fd38367407c4d';
 
-  const defaultWishes = [];
+  let globalWishes = [];
 
-  function loadWishes() {
-    // Clear old v1 key if present
-    localStorage.removeItem('grace21_wishes');
+  async function fetchGlobalWishes() {
+    try {
+      const res = await fetch(WISH_API_URL);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.data && Array.isArray(json.data.wishes)) {
+          globalWishes = json.data.wishes.filter(w => 
+            w.name !== "Dad (Brent)" && w.name !== "Mom" && w.name !== "Bestie Squad"
+          );
+          localStorage.setItem('grace21_wishes_v2', JSON.stringify(globalWishes));
+        }
+      }
+    } catch (err) {
+      console.warn("Using local cache for wishes:", err);
+      const stored = localStorage.getItem('grace21_wishes_v2');
+      if (stored) globalWishes = JSON.parse(stored);
+    }
+    renderWishWall();
+  }
 
-    const stored = localStorage.getItem('grace21_wishes_v2');
-    let wishes = stored ? JSON.parse(stored) : defaultWishes;
+  async function saveGlobalWishes(newWishes) {
+    try {
+      await fetch(WISH_API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'grace21_wishes',
+          data: { wishes: newWishes }
+        })
+      });
+    } catch (err) {
+      console.error("Failed to sync wish to cloud:", err);
+    }
+  }
 
-    // Ensure no old example cards remain
-    wishes = wishes.filter(w => w.name !== "Dad (Brent)" && w.name !== "Mom" && w.name !== "Bestie Squad");
-    localStorage.setItem('grace21_wishes_v2', JSON.stringify(wishes));
-
+  function renderWishWall() {
     wishWall.innerHTML = '';
     
-    if (wishes.length === 0) {
+    if (globalWishes.length === 0) {
       wishWall.innerHTML = `
         <div class="wish-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: rgba(255, 255, 255, 0.02); border: var(--border-gold); border-radius: var(--radius-md);">
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✍️✨</div>
@@ -954,7 +980,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    wishes.forEach(w => {
+    globalWishes.forEach(w => {
       const card = document.createElement('div');
       card.className = 'wish-note-card';
       card.innerHTML = `
@@ -972,7 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })[m]);
   }
 
-  wishForm.addEventListener('submit', (e) => {
+  wishForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('wish-name').value.trim();
     const gift = document.getElementById('wish-gift').value;
@@ -980,17 +1006,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!name || !msg) return;
 
-    const stored = localStorage.getItem('grace21_wishes_v2');
-    const wishes = stored ? JSON.parse(stored) : [];
-    wishes.unshift({ name, gift, msg });
-    localStorage.setItem('grace21_wishes_v2', JSON.stringify(wishes));
+    const newWish = { name, gift, msg, date: new Date().toISOString() };
+    globalWishes.unshift(newWish);
+    localStorage.setItem('grace21_wishes_v2', JSON.stringify(globalWishes));
 
-    loadWishes();
+    renderWishWall();
     wishForm.reset();
     triggerConfettiBurst(width * 0.75, height * 0.75, 100);
+
+    // Save to global cloud database
+    await saveGlobalWishes(globalWishes);
   });
 
-  loadWishes();
+  // Fetch initial global wishes on load and poll every 8 seconds for live updates
+  fetchGlobalWishes();
+  setInterval(fetchGlobalWishes, 8000);
 
   // --------------------------------------------------------------------------
   // 9. PRESENT MODAL & 21 CANDLES CEREMONY MODAL
