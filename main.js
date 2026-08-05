@@ -924,7 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 8. GLOBAL PERSISTENT GUEST WISH WALL (GITHUB GIST CLOUD BACKEND)
+  // 8. GLOBAL PERSISTENT GUEST WISH WALL (DUAL BACKEND ENGINE)
   // --------------------------------------------------------------------------
   const wishForm = document.getElementById('wish-form');
   const wishWall = document.getElementById('wish-wall');
@@ -947,26 +947,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function fetchGlobalWishes() {
+    // 1. Try local Express server endpoint first
     try {
-      // Fetch fresh wishes from GitHub Gist raw URL with timestamp cache-buster
+      const res = await fetch('/api/wishes');
+      if (res.ok) {
+        const wishes = await res.json();
+        if (Array.isArray(wishes) && wishes.length > 0) {
+          globalWishes = wishes;
+          localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
+          renderWishWall();
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fallback to Gist raw URL for static deployments
+    try {
       const res = await fetch(`${GIST_RAW_URL}?t=${Date.now()}`);
       if (res.ok) {
         const serverWishes = await res.json();
         if (Array.isArray(serverWishes)) {
           globalWishes = serverWishes;
-          localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
+          localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
         }
       }
     } catch (err) {
-      console.warn("Server API offline or static mode, relying on local storage:", err);
+      console.warn("Gist fetch offline, using local storage fallback:", err);
       loadLocalWishes();
     }
     renderWishWall();
   }
 
   async function saveGlobalWish(newWish) {
+    // 1. Send to Express backend /api/wishes
     try {
-      const res = await fetch(WISH_API_URL, {
+      const res = await fetch('/api/wishes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newWish)
@@ -975,12 +990,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const updatedWishes = await res.json();
         if (Array.isArray(updatedWishes)) {
           globalWishes = updatedWishes;
-          localStorage.setItem('grace21_wishes_v3', JSON.stringify(globalWishes));
+          localStorage.setItem('grace21_wishes_v4', JSON.stringify(globalWishes));
           renderWishWall();
         }
       }
     } catch (err) {
-      console.warn("Could not sync to remote API, wish remains safely in local storage:", err);
+      console.warn("Could not sync to local API backend:", err);
+    }
+
+    // 2. Also try GitHub Gist update
+    try {
+      await fetch(GIST_API_URL, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `token ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          files: {
+            'grace21_wishes.json': {
+              content: JSON.stringify(globalWishes, null, 2)
+            }
+          }
+        })
+      });
+    } catch (err) {
+      console.warn("Gist sync notice:", err);
     }
   }
 
@@ -1033,8 +1068,8 @@ document.addEventListener('DOMContentLoaded', () => {
     wishForm.reset();
     triggerConfettiBurst(width * 0.75, height * 0.75, 100);
 
-    // Save to GitHub Gist cloud database
-    await saveGlobalWishToGist(globalWishes);
+    // Save wish to backend database
+    await saveGlobalWish(newWish);
   });
 
   // Load local wishes instantly on startup
