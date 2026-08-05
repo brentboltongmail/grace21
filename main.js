@@ -1008,4 +1008,123 @@ document.addEventListener('DOMContentLoaded', () => {
   giftModalClose.addEventListener('click', () => giftModal.classList.add('hidden'));
   btnSingSpeech.addEventListener('click', triggerVocalSpeech);
 
+  // --------------------------------------------------------------------------
+  // 10. AUTO-PLAY MUSIC & AUTO-TOUR ENGINE
+  // --------------------------------------------------------------------------
+  let isAutoTourActive = true;
+  let autoTourFrameId = null;
+  const triggeredButtons = new Set();
+
+  const autotourStatus = document.getElementById('autotour-status');
+  const btnToggleAutotour = document.getElementById('btn-toggle-autotour');
+  const autotourIcon = document.getElementById('autotour-icon');
+
+  // Attempt Autoplay Music Default
+  setTimeout(() => {
+    try {
+      startBirthdayAnthem();
+    } catch (e) {
+      console.warn("Autoplay audio waiting for user gesture:", e);
+    }
+  }, 600);
+
+  // Unlock Audio on First User Gesture if blocked by browser autoplay policy
+  const unlockAudioEvents = ['click', 'touchstart', 'keydown', 'scroll'];
+  function unlockAudio() {
+    if (!isPlaying) {
+      startBirthdayAnthem();
+    }
+    unlockAudioEvents.forEach(ev => window.removeEventListener(ev, unlockAudio));
+  }
+  unlockAudioEvents.forEach(ev => window.addEventListener(ev, unlockAudio, { once: true }));
+
+  // Auto Scroll & Auto Click Engine Loop
+  function runAutoTourLoop() {
+    if (!isAutoTourActive) return;
+
+    // Smooth Slow Downward Scroll
+    window.scrollBy(0, 0.75);
+
+    // List of interactive buttons to simulate click as they enter viewport
+    const tourTargets = [
+      document.querySelector('.launch-unicorn-trigger'),
+      document.querySelector('.light-cake-trigger'),
+      document.querySelector('.confetti-trigger'),
+      document.querySelector('.pop-balloons-trigger'),
+      document.getElementById('btn-cork-pop'),
+      document.getElementById('btn-fireworks'),
+      document.getElementById('btn-unwrap-present')
+    ];
+
+    tourTargets.forEach(btn => {
+      if (btn && !triggeredButtons.has(btn)) {
+        const rect = btn.getBoundingClientRect();
+        // Check if button is in the active viewport trigger zone
+        if (rect.top > height * 0.25 && rect.top < height * 0.65) {
+          triggeredButtons.add(btn);
+          // Highlight button briefly
+          btn.style.boxShadow = '0 0 35px #F7D070';
+          setTimeout(() => {
+            btn.click();
+          }, 100);
+          setTimeout(() => {
+            btn.style.boxShadow = '';
+          }, 800);
+        }
+      }
+    });
+
+    // Check if reached page bottom
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 40) {
+      stopAutoTour();
+      launchGrandFireworksFinale();
+      return;
+    }
+
+    autoTourFrameId = requestAnimationFrame(runAutoTourLoop);
+  }
+
+  function startAutoTour() {
+    isAutoTourActive = true;
+    if (autotourStatus) autotourStatus.innerHTML = '<i class="fa-solid fa-clapperboard"></i> Royal Auto-Tour Active';
+    if (btnToggleAutotour) btnToggleAutotour.innerHTML = '<i class="fa-solid fa-pause"></i> Pause Tour';
+    autoTourFrameId = requestAnimationFrame(runAutoTourLoop);
+  }
+
+  function stopAutoTour() {
+    isAutoTourActive = false;
+    if (autoTourFrameId) cancelAnimationFrame(autoTourFrameId);
+    if (autotourStatus) autotourStatus.innerHTML = '<i class="fa-solid fa-circle-stop"></i> Auto-Tour Paused';
+    if (btnToggleAutotour) btnToggleAutotour.innerHTML = '<i class="fa-solid fa-play"></i> Resume Tour';
+  }
+
+  // Toggle Button Click
+  if (btnToggleAutotour) {
+    btnToggleAutotour.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isAutoTourActive) {
+        stopAutoTour();
+      } else {
+        startAutoTour();
+      }
+    });
+  }
+
+  // Allow User to Interrupt Auto-Tour anytime with wheel or drag
+  const userInterruptEvents = ['wheel', 'touchstart', 'keydown'];
+  userInterruptEvents.forEach(ev => {
+    window.addEventListener(ev, (e) => {
+      // Ignore clicks on control button itself
+      if (e.target.closest('#autotour-banner')) return;
+      if (isAutoTourActive) {
+        stopAutoTour();
+      }
+    }, { passive: true });
+  });
+
+  // Start Auto-Tour by default after brief 1-second delay
+  setTimeout(() => {
+    startAutoTour();
+  }, 1000);
+
 });
